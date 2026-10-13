@@ -27,10 +27,12 @@ Thumbs.db
 # Data
 data/raw/*
 data/processed/*
+data/external/*
 
 # Exceptions
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/external/.gitkeep
 
 # Logs
 *.log
@@ -39,3 +41,5 @@ data/processed/*
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+/docs
