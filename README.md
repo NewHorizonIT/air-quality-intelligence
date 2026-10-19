@@ -202,6 +202,28 @@ Python · Pandas · LightGBM · Optuna · SHAP · Scikit-learn · Streamlit · M
 
 ---
 
+## Tóm tắt dự án (Vietnamese)
+
+| Hạng mục | Chi tiết |
+|---|---|
+| **Tên dự án** | Air Quality Intelligence Platform |
+| **Mục tiêu** | Dự đoán nồng độ PM2.5 ngày hôm sau tại Delhi, Ấn Độ |
+| **Hội nghị** | FJCAI 2026 — deadline tháng 11/2026 |
+| **Khu vực nghiên cứu** | Delhi NCR, Ấn Độ (bounding box: 76.84–77.35°E, 28.40–28.88°N) |
+| **Dữ liệu chất lượng không khí** | OpenAQ v3 — 59 trạm quan trắc, 2022–2025, 6 thông số |
+| **Dữ liệu thời tiết** | Open-Meteo ERA5 — nhiệt độ, mưa, gió, độ ẩm (miễn phí) |
+| **Dữ liệu công nghiệp** | WRI GPPD — nhà máy nhiệt điện trong bán kính 50km |
+| **Mô hình chính** | LightGBM + Optuna (100 trials, tối ưu MAE) |
+| **Số lượng features** | 24 features: 13 temporal · 6 thời tiết · 3 công nghiệp |
+| **Biến mục tiêu** | PM2.5 (µg/m³) tại trạm s ngày t+1 |
+| **Phân chia dữ liệu** | Train: 2022–2024/03 · Val: 2024/04–09 · Test: 2024/10–2025 |
+| **Đánh giá** | MAE, RMSE, R², MAPE — phân tích theo 4 mùa |
+| **Giải thích mô hình** | SHAP TreeExplainer — bar chart, beeswarm, theo mùa |
+| **Ứng dụng** | Streamlit — demo dự đoán theo trạm + SHAP waterfall |
+| **Trạng thái** | Phase 2/7 hoàn thành (cleaning xong, đang feature engineering) |
+
+---
+
 ## License
 
 For academic research purposes only.
