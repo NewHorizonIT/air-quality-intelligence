@@ -1,8 +1,9 @@
+[![EN](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
+[![VI](https://img.shields.io/badge/lang-vi-yellow.svg)](README.vi.md)
+
 # Air Quality Intelligence Platform
 
 Next-day PM2.5 forecasting for Delhi, India using multi-source environmental data and LightGBM.
-
-> Research project for FJCAI 2026 — submission deadline November 2026.
 
 ---
 
@@ -28,7 +29,7 @@ Delhi is consistently ranked among the world's most polluted cities. This projec
 | LightGBM Exp2 (+ weather) | — | — | — |
 | LightGBM Exp3 (+ industrial) | — | — | — |
 
-*Results will be updated after Phase 4 (model training, week of Nov 3).*
+*Results will be updated .*
 
 ---
 
@@ -47,40 +48,40 @@ Delhi is consistently ranked among the world's most polluted cities. This projec
 ```
 air-quality-intelligence/
 ├── src/
-│   ├── ingestion/          # Phase 1: data fetching
+│   ├── ingestion/          
 │   │   ├── openaq_client.py
 │   │   ├── fetch_air_quality.py
 │   │   ├── fetch_weather.py
 │   │   ├── fetch_industrial.py
 │   │   └── verify_data.py
-│   ├── processing/         # Phase 2: cleaning
+│   ├── processing/         
 │   │   ├── clean_air_quality.py
 │   │   ├── clean_weather.py
 │   │   ├── clean_industrial.py
 │   │   └── verify_cleaned.py
-│   ├── features/           # Phase 3: feature engineering
+│   ├── features/           
 │   │   └── build_features.py
-│   └── models/             # Phase 4–5: training & evaluation
+│   └── models/             
 │       ├── baseline.py
 │       ├── train_lgbm.py
 │       ├── evaluate.py
 │       └── interpret.py
-├── app/                    # Streamlit dashboard
+├── app/                    
 │   ├── main.py
 │   └── pages/
 ├── data/
-│   ├── raw/                # Per-sensor parquets + merged
-│   ├── cleaned/            # Post-cleaning parquets
-│   ├── features/           # train / val / test splits
-│   └── external/           # WRI GPPD industrial
-├── models/                 # Saved model files (.pkl)
+│   ├── raw/                
+│   ├── cleaned/            
+│   ├── features/           
+│   └── external/           
+├── models/                 
 ├── notebooks/
 │   └── eda.ipynb
 ├── reports/
-│   └── figures/            # All paper figures (300 DPI)
+│   └── figures/           
 ├── docs/
-│   ├── adr/                # Architecture Decision Records
-│   └── weekly_plans/       # Week-by-week project plan
+│   ├── adr/                
+│   └── weekly_plans/       
 └── requirements.txt
 ```
 
@@ -175,10 +176,11 @@ Test  : 2024-10-01 → 2025-12-31
 
 LightGBM regressor tuned with Optuna (100 trials, objective = MAE on val set).
 
-Ablation study:
-- **Exp1** — temporal features only
-- **Exp2** — Exp1 + weather
-- **Exp3** — Exp2 + industrial ← main model
+| Experiment | Feature set |
+|---|---|
+| Exp1 | Temporal only |
+| Exp2 | Exp1 + Weather |
+| Exp3 ← main | Exp2 + Industrial |
 
 ---
 
@@ -199,28 +201,6 @@ Python · Pandas · LightGBM · Optuna · SHAP · Scikit-learn · Streamlit · M
 | 5 | Evaluation + SHAP | Nov 10–14 |
 | 6 | Paper Writing | Nov 17–21 |
 | 7 | Paper Final + Submit | Nov 24–28 |
-
----
-
-## Tóm tắt dự án (Vietnamese)
-
-| Hạng mục | Chi tiết |
-|---|---|
-| **Tên dự án** | Air Quality Intelligence Platform |
-| **Mục tiêu** | Dự đoán nồng độ PM2.5 ngày hôm sau tại Delhi, Ấn Độ |
-| **Hội nghị** | FJCAI 2026 — deadline tháng 11/2026 |
-| **Khu vực nghiên cứu** | Delhi NCR, Ấn Độ (bounding box: 76.84–77.35°E, 28.40–28.88°N) |
-| **Dữ liệu chất lượng không khí** | OpenAQ v3 — 59 trạm quan trắc, 2022–2025, 6 thông số |
-| **Dữ liệu thời tiết** | Open-Meteo ERA5 — nhiệt độ, mưa, gió, độ ẩm (miễn phí) |
-| **Dữ liệu công nghiệp** | WRI GPPD — nhà máy nhiệt điện trong bán kính 50km |
-| **Mô hình chính** | LightGBM + Optuna (100 trials, tối ưu MAE) |
-| **Số lượng features** | 24 features: 13 temporal · 6 thời tiết · 3 công nghiệp |
-| **Biến mục tiêu** | PM2.5 (µg/m³) tại trạm s ngày t+1 |
-| **Phân chia dữ liệu** | Train: 2022–2024/03 · Val: 2024/04–09 · Test: 2024/10–2025 |
-| **Đánh giá** | MAE, RMSE, R², MAPE — phân tích theo 4 mùa |
-| **Giải thích mô hình** | SHAP TreeExplainer — bar chart, beeswarm, theo mùa |
-| **Ứng dụng** | Streamlit — demo dự đoán theo trạm + SHAP waterfall |
-| **Trạng thái** | Phase 2/7 hoàn thành (cleaning xong, đang feature engineering) |
 
 ---
 
