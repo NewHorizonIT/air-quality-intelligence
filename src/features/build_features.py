@@ -44,8 +44,8 @@ CLEANED_DIR  = ROOT / "data" / "cleaned"
 EXTERNAL_DIR = ROOT / "data" / "external"
 FEATURES_DIR = ROOT / "data" / "features"
 
-TRAIN_END = pd.Timestamp("2024-03-31")
-VAL_END   = pd.Timestamp("2024-09-30")
+TRAIN_END = pd.Timestamp("2025-06-30")
+VAL_END   = pd.Timestamp("2025-09-30")
 
 WEATHER_COLS = [
     "temperature", "wind_speed", "wind_direction",
