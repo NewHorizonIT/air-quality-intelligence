@@ -85,7 +85,7 @@ def verify_weather():
         "wind_speed":            ( 0.0,  150.0),
         "precipitation":         ( 0.0,  300.0),
         "humidity":              ( 0.0,  100.0),
-        "boundary_layer_height": ( 0.0, 4000.0),
+        "et0":                   (  0.0,   20.0),  # mm/day
     }
     logger.info("\n  Bounds & null % per column:")
     for col, (lo, hi) in BOUNDS.items():

@@ -47,7 +47,7 @@ DAILY_VARS = [
     "precipitation_sum",  # → precipitation
     "wind_speed_10m_max",  # → wind_speed
     "wind_direction_10m_dominant",  # → wind_direction
-    "et0_fao_evapotranspiration",  # → boundary_layer_height (proxy)
+    "et0_fao_evapotranspiration",  # → et0 (mm/day)
 ]
 
 # Hourly variables, aggregated to daily mean
@@ -98,7 +98,7 @@ def fetch_station(
             "precipitation": daily.Variables(1).ValuesAsNumpy(),
             "wind_speed": daily.Variables(2).ValuesAsNumpy(),
             "wind_direction": daily.Variables(3).ValuesAsNumpy(),
-            "boundary_layer_height": daily.Variables(4).ValuesAsNumpy(),  # et0 proxy
+            "et0": daily.Variables(4).ValuesAsNumpy(),
         }
     )
     df["date"] = pd.to_datetime(df["date"]).dt.normalize()
@@ -135,7 +135,7 @@ def fetch_station(
             "wind_direction",
             "precipitation",
             "humidity",
-            "boundary_layer_height",
+            "et0",
         ]
     ]
 
