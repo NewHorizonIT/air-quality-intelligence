@@ -1,0 +1,15 @@
+split,group,subgroup,MAE,RMSE,R2,N
+val,overall,all,9.343,13.328,0.3011,4076
+test,overall,all,45.415,63.144,0.5274,4622
+val,season,Monsoon,9.343,13.328,0.3011,4076
+test,season,Winter,51.559,72.292,0.2933,1562
+test,season,Autumn,42.279,57.921,0.5832,3060
+val,level,Good,12.759,14.728,-17.8618,244
+val,level,Moderate,7.033,8.96,-1.8948,2375
+val,level,Unhealthy,10.758,13.862,-1.2467,1361
+val,level,Very Unhealthy,34.542,40.523,-6.8786,82
+test,level,Good,62.336,84.478,-350.0627,7
+test,level,Moderate,23.189,31.751,-37.1534,158
+test,level,Unhealthy,21.412,36.612,-8.0643,419
+test,level,Very Unhealthy,38.458,48.542,-4.0865,1347
+test,level,Hazardous,54.15,73.781,-0.2095,2635
