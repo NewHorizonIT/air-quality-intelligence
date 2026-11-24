@@ -47,71 +47,135 @@ Delhi is consistently ranked among the world's most polluted cities. This projec
 
 ```
 air-quality-intelligence/
-├── src/
-│   ├── ingestion/          
-│   │   ├── openaq_client.py
-│   │   ├── fetch_air_quality.py
-│   │   ├── fetch_weather.py
-│   │   ├── fetch_industrial.py
-│   │   └── verify_data.py
-│   ├── processing/         
-│   │   ├── clean_air_quality.py
-│   │   ├── clean_weather.py
-│   │   ├── clean_industrial.py
-│   │   └── verify_cleaned.py
-│   ├── features/           
-│   │   └── build_features.py
-│   └── models/             
-│       ├── baseline.py
-│       ├── train_lgbm.py
-│       ├── evaluate.py
-│       └── interpret.py
-├── app/                    
-│   ├── main.py
-│   └── pages/
+├── api/                        ← FastAPI backend (serves the web app)
+│   └── main.py                 #   4 endpoints: /stations /daily /history /predict
+├── web/                        ← React + Vite frontend
+│   ├── src/
+│   │   ├── components/         #   AlertBanner, KPICard, MapView, ShapChart, …
+│   │   ├── pages/              #   Dashboard.jsx, Prediction.jsx
+│   │   ├── hooks/useApi.js
+│   │   └── utils/              #   api.js, levels.js
+│   └── package.json
+├── src/                        ← ML pipeline
+│   ├── ingestion/
+│   ├── processing/
+│   ├── features/
+│   └── models/
 ├── data/
-│   ├── raw/                
-│   ├── cleaned/            
-│   ├── features/           
-│   └── external/           
-├── models/                 
+│   ├── raw/
+│   ├── cleaned/
+│   ├── features/               #   train / val / test .parquet
+│   └── external/               #   weather.parquet, industrial.parquet
+├── models/                     #   lgbm_exp3_best.pkl (pre-trained, tracked by Git LFS)
 ├── notebooks/
-│   └── eda.ipynb
-├── reports/
-│   └── figures/           
-├── docs/
-│   ├── adr/                
-│   └── weekly_plans/       
+├── reports/figures/
+├── docs/adr/
 └── requirements.txt
 ```
 
 ---
 
-## Setup
+## Installation & Setup
 
-**Requirements:** Python 3.11+
+### Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Python | 3.11+ | Required for ML pipeline + API server |
+| Node.js | 18+ | Required for the React web app |
+| Git | any | Clone the repo |
+
+### 1 — Clone & create Python environment
 
 ```bash
+git clone <repo-url>
+cd air-quality-intelligence
+
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-pip install -r requirements.txt
+
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+# Install all Python dependencies (ML + API)
+python -m pip install -r requirements.txt
+python -m pip install fastapi          # web framework for the demo API
 ```
 
-**API key** — create a `.env` file in the project root:
+### 2 — Install frontend dependencies
 
+```bash
+cd web
+npm install
+cd ..
 ```
+
+### 3 — Configure API key
+
+Create a `.env` file in the project root (needed only for data ingestion — not required to run the demo):
+
+```dotenv
 OPENAQ_API_KEY=your_key_here
 ```
 
 Get a free key at [openaq.org](https://openaq.org/).
 
+> **Note:** Pre-processed data (`data/features/*.parquet`) and trained models (`models/*.pkl`) are already committed to the repo. You can skip directly to **Running the Demo** without re-running the full pipeline.
+
 ---
 
-## Running the Pipeline
+## Running the Demo
+
+The demo requires two processes running simultaneously — the API server and the web dev server.
+
+### Terminal 1 — Start the API server
+
+```bash
+# From the project root
+uvicorn api.main:app --reload --port 8000
+```
+
+Expected output:
+```
+[api] Loading lgbm_exp3_best.pkl …
+[api] Reading data/features/test.parquet …
+[api] Initialising shap.TreeExplainer …
+[api] API ready on http://localhost:8000
+INFO:     Application startup complete.
+```
+
+You can verify the API is up:
+- `GET http://localhost:8000/api/stations` — list of 53 monitoring stations
+- `GET http://localhost:8000/api/daily`    — city-wide daily PM2.5 trend
+- Interactive docs: `http://localhost:8000/docs`
+
+### Terminal 2 — Start the web app
+
+```bash
+cd web
+npm run dev
+```
+
+Expected output:
+```
+  VITE v8.x.x  ready in xxx ms
+  ➜  Local:   http://localhost:5173/
+```
+
+Open **http://localhost:5173** in your browser.
+
+> The Vite dev server proxies all `/api/*` requests to `http://localhost:8000`, so both processes must be running.
+
+---
+
+## Running the ML Pipeline
+
+> Skip this section if you only want to run the demo — trained models are already included.
 
 Run each phase in order. Each phase reads from the previous phase's output.
 
-**Phase 1 — Fetch raw data**
+**Phase 1 — Fetch raw data** *(requires OPENAQ_API_KEY in .env)*
 ```bash
 python src/ingestion/fetch_air_quality.py   # ~30 min, resumable
 python src/ingestion/fetch_weather.py
@@ -140,13 +204,8 @@ python src/models/train_lgbm.py      # ~50 min for Optuna 100 trials
 
 **Phase 5 — Evaluate + interpret**
 ```bash
-python src/models/evaluate.py
-python src/models/interpret.py
-```
-
-**Streamlit app**
-```bash
-streamlit run app/main.py
+python src/models/evaluate.py        # writes reports/evaluation_report.csv
+python src/models/interpret.py       # writes reports/figures/shap_*.png
 ```
 
 ---
@@ -186,7 +245,12 @@ LightGBM regressor tuned with Optuna (100 trials, objective = MAE on val set).
 
 ## Tech Stack
 
-Python · Pandas · LightGBM · Optuna · SHAP · Scikit-learn · Streamlit · Matplotlib · Seaborn · Folium
+| Layer | Technologies |
+|-------|-------------|
+| ML pipeline | Python · Pandas · LightGBM · Optuna · SHAP · Scikit-learn |
+| API server | FastAPI · Uvicorn · PyArrow |
+| Web frontend | React 19 · Vite · Tailwind CSS · Recharts · Leaflet |
+| Visualization | Matplotlib · Seaborn |
 
 ---
 

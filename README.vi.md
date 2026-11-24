@@ -47,79 +47,143 @@ Delhi là một trong những thành phố ô nhiễm nhất thế giới. Dự 
 
 ```
 air-quality-intelligence/
-├── src/
-│   ├── ingestion/          
-│   │   ├── openaq_client.py
-│   │   ├── fetch_air_quality.py
-│   │   ├── fetch_weather.py
-│   │   ├── fetch_industrial.py
-│   │   └── verify_data.py
-│   ├── processing/         
-│   │   ├── clean_air_quality.py
-│   │   ├── clean_weather.py
-│   │   ├── clean_industrial.py
-│   │   └── verify_cleaned.py
-│   ├── features/           
-│   │   └── build_features.py
-│   └── models/             
-│       ├── baseline.py
-│       ├── train_lgbm.py
-│       ├── evaluate.py
-│       └── interpret.py
-├── app/                    
-│   ├── main.py
-│   └── pages/
+├── api/                        ← FastAPI backend (phục vụ web app)
+│   └── main.py                 #   4 endpoints: /stations /daily /history /predict
+├── web/                        ← Frontend React + Vite
+│   ├── src/
+│   │   ├── components/         #   AlertBanner, KPICard, MapView, ShapChart, …
+│   │   ├── pages/              #   Dashboard.jsx, Prediction.jsx
+│   │   ├── hooks/useApi.js
+│   │   └── utils/              #   api.js, levels.js
+│   └── package.json
+├── src/                        ← ML pipeline
+│   ├── ingestion/
+│   ├── processing/
+│   ├── features/
+│   └── models/
 ├── data/
-│   ├── raw/                
-│   ├── cleaned/           
-│   ├── features/           
-│   └── external/           
-├── models/                
+│   ├── raw/
+│   ├── cleaned/
+│   ├── features/               #   train / val / test .parquet
+│   └── external/               #   weather.parquet, industrial.parquet
+├── models/                     #   lgbm_exp3_best.pkl (pre-trained)
 ├── notebooks/
-│   └── eda.ipynb
-├── reports/
-│   └── figures/            
-├── docs/
-│   ├── adr/                
-│   └── weekly_plans/       
+├── reports/figures/
+├── docs/adr/
 └── requirements.txt
 ```
 
 ---
 
-## Cài đặt
+## Cài đặt & Cấu hình
 
-**Yêu cầu:** Python 3.11+
+### Yêu cầu hệ thống
+
+| Công cụ | Phiên bản | Ghi chú |
+|---------|-----------|---------|
+| Python | 3.11+ | Pipeline ML + API server |
+| Node.js | 18+ | Web app React |
+| Git | bất kỳ | Clone repo |
+
+### 1 — Clone repo & tạo môi trường Python
 
 ```bash
+git clone <repo-url>
+cd air-quality-intelligence
+
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-pip install -r requirements.txt
+
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+# Cài toàn bộ thư viện Python (ML + API)
+python -m pip install -r requirements.txt
+python -m pip install fastapi          # web framework cho demo API
 ```
 
-**API key** — tạo file `.env` ở thư mục gốc:
+### 2 — Cài thư viện frontend
 
+```bash
+cd web
+npm install
+cd ..
 ```
+
+### 3 — Cấu hình API key
+
+Tạo file `.env` ở thư mục gốc (chỉ cần cho bước thu thập dữ liệu — không cần để chạy demo):
+
+```dotenv
 OPENAQ_API_KEY=your_key_here
 ```
 
 Lấy key miễn phí tại [openaq.org](https://openaq.org/).
 
+> **Lưu ý:** Dữ liệu đã xử lý (`data/features/*.parquet`) và model đã train (`models/*.pkl`) đã có sẵn trong repo. Có thể bỏ qua toàn bộ pipeline và chạy demo ngay.
+
 ---
 
-## Chạy pipeline
+## Chạy Demo Web
+
+Demo cần chạy song song 2 process — API server và web dev server.
+
+### Terminal 1 — Khởi động API server
+
+```bash
+# Chạy từ thư mục gốc dự án
+uvicorn api.main:app --reload --port 8000
+```
+
+Output khi khởi động thành công:
+```
+[api] Loading lgbm_exp3_best.pkl …
+[api] Reading data/features/test.parquet …
+[api] Initialising shap.TreeExplainer …
+[api] API ready on http://localhost:8000
+INFO:     Application startup complete.
+```
+
+Kiểm tra API:
+- `GET http://localhost:8000/api/stations` — danh sách 53 trạm quan trắc
+- `GET http://localhost:8000/api/daily`    — xu hướng PM2.5 theo ngày
+- Swagger UI: `http://localhost:8000/docs`
+
+### Terminal 2 — Khởi động web app
+
+```bash
+cd web
+npm run dev
+```
+
+Output:
+```
+  VITE v8.x.x  ready in xxx ms
+  ➜  Local:   http://localhost:5173/
+```
+
+Mở **http://localhost:5173** trên trình duyệt.
+
+> Vite tự động proxy tất cả request `/api/*` về `http://localhost:8000`, nên cả 2 process phải chạy đồng thời.
+
+---
+
+## Chạy ML Pipeline (tùy chọn)
+
+> Bỏ qua phần này nếu chỉ muốn chạy demo — model đã train sẵn trong repo.
 
 Chạy từng phase theo thứ tự. Mỗi phase đọc output của phase trước.
 
-**Phase 1 — Thu thập dữ liệu thô**
+**Phase 1 — Thu thập dữ liệu thô** *(cần OPENAQ_API_KEY trong .env)*
 ```bash
-python src/ingestion/fetch_air_quality.py   # ~30 phút, có thể tiếp tục
+python src/ingestion/fetch_air_quality.py   # ~30 phút, có thể tiếp tục nếu bị gián đoạn
 python src/ingestion/fetch_weather.py
 python src/ingestion/fetch_industrial.py
 python src/ingestion/verify_data.py
 ```
 
-**Phase 2 — Làm sạch**
+**Phase 2 — Làm sạch dữ liệu**
 ```bash
 python src/processing/clean_air_quality.py
 python src/processing/clean_weather.py
@@ -132,7 +196,7 @@ python src/processing/verify_cleaned.py
 python src/features/build_features.py
 ```
 
-**Phase 4 — Huấn luyện**
+**Phase 4 — Huấn luyện mô hình**
 ```bash
 python src/models/baseline.py
 python src/models/train_lgbm.py      # ~50 phút cho Optuna 100 trials
@@ -140,13 +204,8 @@ python src/models/train_lgbm.py      # ~50 phút cho Optuna 100 trials
 
 **Phase 5 — Đánh giá + giải thích**
 ```bash
-python src/models/evaluate.py
-python src/models/interpret.py
-```
-
-**Streamlit app**
-```bash
-streamlit run app/main.py
+python src/models/evaluate.py        # xuất reports/evaluation_report.csv
+python src/models/interpret.py       # xuất reports/figures/shap_*.png
 ```
 
 ---
@@ -186,7 +245,12 @@ LightGBM tối ưu siêu tham số bằng Optuna (100 trials, mục tiêu tối 
 
 ## Công nghệ sử dụng
 
-Python · Pandas · LightGBM · Optuna · SHAP · Scikit-learn · Streamlit · Matplotlib · Seaborn · Folium
+| Tầng | Công nghệ |
+|------|----------|
+| ML pipeline | Python · Pandas · LightGBM · Optuna · SHAP · Scikit-learn |
+| API server | FastAPI · Uvicorn · PyArrow |
+| Web frontend | React 19 · Vite · Tailwind CSS · Recharts · Leaflet |
+| Trực quan hoá | Matplotlib · Seaborn |
 
 ---
 
